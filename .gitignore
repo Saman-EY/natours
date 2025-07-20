@@ -1,0 +1,31 @@
+# Dependency directory
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# dotenv files (keep secrets out of git)
+.env
+*.env
+
+# OS & editor system files
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional)
+.vscode/
+
+# Coverage reports
+coverage/
+
+# Build output
+dist/
+build/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
