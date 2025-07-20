@@ -12,8 +12,6 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-
-
 exports.getAllTours = async (req, res) => {
   try {
     ///////////////////////////////////////////////// SOME REFRENCES
@@ -34,7 +32,7 @@ exports.getAllTours = async (req, res) => {
     // const excludedFields = ['page', 'sort', 'limit', 'fields'];
     // excludedFields.forEach(el => delete queryObj[el]);
 
-    // 1) Filtering
+    // // 1) Filtering
     // let queryStr = JSON.stringify(queryObj);
     // queryStr = queryStr.replace(/\b(gte|gt|lte|lr)\b/g, match => `$${match}`);
 
@@ -75,6 +73,7 @@ exports.getAllTours = async (req, res) => {
       .limitFields()
       .paginate();
     const tours = await features.query;
+    // const tours = await query;
 
     // SEND RESPONSE
     res.status(200).json({
@@ -151,6 +150,44 @@ exports.deleteTour = async (req, res) => {
       status: 'success',
       data: null,
       message: `itm deleted 😊`
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error
+    });
+  }
+};
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingAverage: { $gte: 4.5 } }
+      },
+      {
+        $group: {
+          _id: '$difficulty',
+          // _id: 1,
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      },
+      {
+        $match: {_id: {$ne: "easy"}}
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: { stats }
     });
   } catch (error) {
     res.status(400).json({

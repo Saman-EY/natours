@@ -19,7 +19,7 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false
   })
-  .then(() => console.log('connection successful'));
+  .then(() => console.log('connection to DB successful'));
 
 app.listen(port, () => {
   console.log('wating for connection');

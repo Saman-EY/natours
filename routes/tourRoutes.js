@@ -6,6 +6,7 @@ const controllers = require('../controllers/tourControllers');
 router
   .route('/top-5-cheap')
   .get(controllers.aliasTopTours, controllers.getAllTours);
+router.route('/tour-stats').get(controllers.getTourStats);
 
 router
   .route('/')
