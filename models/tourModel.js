@@ -1,16 +1,20 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = mongoose.Schema(
   {
     name: {
       type: String,
       required: [true, 'a tour must have a name'],
-      unique: true
+      unique: true,
+      maxlength: [40, "name can't be more than 40 characters"],
+      minlength: [10, "name can't be less than 10 characters"],
+      // validate: [validator.isAlpha, 'tour name must only contain characters']
     },
     rating: {
       type: Number,
-      default: 3.5
+      default: 3.5 
       // select: false,
     },
     slug: String,
@@ -28,17 +32,22 @@ const tourSchema = mongoose.Schema(
     },
     difficulty: {
       type: String,
-      required: [true, 'must have a difficulty']
+      required: [true, 'must have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'difficulty is either: easy, medium, difficult'
+      }
     },
     ratingAverage: {
       type: Number,
-      default: 4.5
+      default: 4.5,
+      min: [1, 'rating must be above 1.0'],
+      max: [5, 'rating must be below 5.0']
     },
     ratingQuantity: {
       type: Number,
       default: 0
     },
-    priceDiscount: Number,
     summary: {
       type: String,
       trim: true,
@@ -58,6 +67,16 @@ const tourSchema = mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now()
+    },
+
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function(val) {
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below regular price'
+      }
     },
 
     secretTour: {
@@ -109,7 +128,7 @@ tourSchema.post(/^find/, function(next) {
 
 // AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function(next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); 
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
 });
 
