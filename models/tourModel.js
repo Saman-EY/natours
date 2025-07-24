@@ -9,12 +9,12 @@ const tourSchema = mongoose.Schema(
       required: [true, 'a tour must have a name'],
       unique: true,
       maxlength: [40, "name can't be more than 40 characters"],
-      minlength: [10, "name can't be less than 10 characters"],
+      minlength: [10, "name can't be less than 10 characters"]
       // validate: [validator.isAlpha, 'tour name must only contain characters']
     },
     rating: {
       type: Number,
-      default: 3.5 
+      default: 3.5
       // select: false,
     },
     slug: String,
@@ -113,6 +113,7 @@ tourSchema.pre('save', function(next) {
 // });
 
 // QUERY MIDDLEWARES
+
 // tourSchema.pre('find', function(next) {
 tourSchema.pre(/^find/, function(next) {
   this.find({ secretTour: { $ne: true } });
@@ -121,7 +122,7 @@ tourSchema.pre(/^find/, function(next) {
   next();
 });
 
-tourSchema.post(/^find/, function(next) {
+tourSchema.post(/^find/, function(doc, next) {
   console.log(`query took ${Date.now() - this.start} milliseconds!`);
   next();
 });
