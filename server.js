@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
+process.on('uncaughtException', err => {
+  console.log(err.name, err.message);
+  console.log('uncaught EXCEPTION, shutting dow....');
+  process.exit(1);
+});
+
 dotenv.config({
   path: './config.env'
 });
@@ -13,8 +19,6 @@ const DB = process.env.DATABASE.replace(
   process.env.DATABASE_PASSWORD
 );
 
-console.log("ffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", process.env.NODE_ENV)
-
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
@@ -23,6 +27,14 @@ mongoose
   })
   .then(() => console.log('connection to DB successful'));
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log('wating for connection');
+});
+
+process.on('unhandledRejection', err => {
+  console.log(err.name, err.message);
+  console.log('unhandled rejection, shutting dow....');
+  server.close(() => {
+    process.exit(1);
+  });
 });
