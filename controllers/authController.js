@@ -14,6 +14,18 @@ const signToken = id => {
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+  const cookieOption = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true
+  };
+
+  if (!process.env.NODE_ENV === 'production') cookieOption.secure = true;
+
+  res.cookie('jwt', token, cookieOption);
+
+  user.password = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -22,6 +34,16 @@ const createSendToken = (user, statusCode, res) => {
       user
     }
   });
+};
+
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+
+  Object.keys(obj).forEach(el => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+
+  return newObj;
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
@@ -198,4 +220,38 @@ exports.updatePassword = async (req, res, next) => {
   await user.save();
 
   // 3) log user in, send JWT
+  createSendToken(user, 200, res);
 };
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // 1) create error if user post password data
+
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(new AppError('this route is not for password!', 400));
+  }
+
+  // 2) filter out unwanted fileds that are not allow
+  const filteredBody = filterObj(req.body, 'name', 'email');
+
+  // 3) update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser
+    }
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
