@@ -32,17 +32,9 @@ exports.signup = catchAsync(async (req, res, next) => {
     confirmPassword: req.body.confirmPassword
   });
 
+  createSendToken(newUser, 201, res);
+
   newUser.password = undefined;
-
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser
-    }
-  });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -183,12 +175,13 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // 3) update changedPasswordAt property for the user
   // 4) log the user in, send JWT
+  createSendToken(user, 200, res);
 
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  // const token = signToken(user._id);
+  // res.status(200).json({
+  //   status: 'success',
+  //   token
+  // });
 });
 
 exports.updatePassword = async (req, res, next) => {
@@ -196,7 +189,7 @@ exports.updatePassword = async (req, res, next) => {
   const user = await User.findById(req.user.id).select('+passwrod');
 
   // 2) check if posted current pass is correct
-  if (!(await user.correctPasswrod(req.body.passwordConfirm, user.password))) {
+  if (!(await user.correctPasswrod(req.body.passwordCurrent, user.password))) {
     return next(new AppError('your current password is wrong', 401));
   }
   // 3) if so, update pass
